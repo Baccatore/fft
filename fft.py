@@ -1,4 +1,4 @@
-#coding: utf-8
+#!python3
 # Fast Fourier Transform Script
 # Author: Yuichiro SUGA
 # Created: 2017-11-03
@@ -8,9 +8,10 @@ import numpy as np
 import csv
 import matplotlib.pyplot as plt
 import sys
+import os
 
-fileName = ''   # File Name as Input in ./inputCSV
-data = []       # Data list in time space
+#fileName = ''   # File Name as Input in ./inputCSV
+#data = []       # Data list in time space
 sp = []         # Spectrum in frequency space
 freq = []       # Frequency axis
 N = 1024        # Number of input data in time space
@@ -25,12 +26,13 @@ def preamble():
     print('Created on 2017-11-03')
     print('By Yuichiro SUGA @ Doshisha Univ.')
 
-def readFile():
-    global fileName
-    fileName = sys.argv[1]
+#def readFile(csv_filename):
+#    global fileName
+#    fileName = csv_filename
 
-def analysis():
-    global data, sp, freq, date, fileName
+def analysis(fileName):
+    global sp, freq, date
+    data = []
     with open('./inputCSV/'+fileName) as dataFile:
         rows = csv.reader(dataFile, delimiter=',',
                 quotechar='|')
@@ -39,17 +41,16 @@ def analysis():
             next(rows)
         for row in rows:    
             data.append(row[0]) # Change value if the culumn to
-                                # read changes
-        sp = np.fft.fft(data[0:N])
-        freq = np.fft.fftfreq(N,d=dt)
+    sp = np.fft.fft(data[0:N])
+    freq = np.fft.fftfreq(N,d=dt)
 
-def output():
-    global data,  sp, freq, fileName
+def output(fileName):
+    global  sp, freq
     #Select the range without DC component 
     freq = freq[1:N>>1]
     sp = list(map(abs,sp[1:N>>1]))
     #CSV output
-    with open('./outputCSV/'+fileName[0:-4]+ 'FFT.CSV','w') as csvfile:
+    with open('./outputCSV/'+fileName[0:-4]+'FFT.CSV','w') as csvfile:
         writer = csv.writer(csvfile, 
                 delimiter=',',
                 quotechar='|',
@@ -60,12 +61,15 @@ def output():
             record = [freq[i],sp[i]]
             writer.writerow(record)
     #Graph output
+    plt.clf()
     plt.xlabel('x: Frequenciy [Hz]')
     plt.ylabel('y: Amplitude [V]')
+#    plt.xlim(0,1000000)
+#    plt.ylim(0.0,3.0)
     plt.title(fileName)
     plt.plot(freq,sp)
     plt.savefig('./outputFigure/'+fileName[0:-3]+'png')
-    plt.show() #Uncomment if you wanna show the graph
+    #plt.show() #Uncomment if you wanna show the graph
     #Standard output for logging
     print(fileName)
 
@@ -76,8 +80,11 @@ def prologue():
 
 if __name__ == '__main__':
     #preamble()
-    readFile()
-    analysis()
-    output()
+    for csv_filename in os.listdir('./inputCSV'):
+        if not csv_filename.endswith('.CSV'):
+            continue
+        #readFile(csv_filename)
+        analysis(csv_filename)
+        output(csv_filename)
     #prologue()
 
